@@ -14,6 +14,9 @@ public class Command {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 
+    @Column(name = "total_price")
+    private int totalPrice = 0;
+
     @ManyToMany(fetch = FetchType.LAZY,
             cascade = {
                     CascadeType.PERSIST,
@@ -22,6 +25,7 @@ public class Command {
             mappedBy = "commands")
     @JsonIgnore
     private Set<Product> products = new HashSet<>();
+
 
     public Command() {
     }
@@ -36,4 +40,9 @@ public class Command {
     public void setProducts(Set<Product> tutorials) {
         this.products = tutorials;
     }
+    public void addProduct(Product product) {
+        this.products.add(product);
+        this.totalPrice = this.totalPrice + product.getPrice();
+    }
+
 }

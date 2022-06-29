@@ -10,5 +10,4 @@ public interface CommandRepository extends JpaRepository<Command, Long> {
 
     List<Command> findCommandsByProductsId(Long productId);
 
-
 }

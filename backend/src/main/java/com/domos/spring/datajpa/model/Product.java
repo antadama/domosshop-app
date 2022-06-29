@@ -43,7 +43,7 @@ public class Product {
 
     public void addCommand(Command command) {
         this.commands.add(command);
-        command.getProducts().add(this);
+        command.addProduct(this);
     }
 
     public void removeCommand(long commandId) {

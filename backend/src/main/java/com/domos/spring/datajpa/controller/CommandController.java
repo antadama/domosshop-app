@@ -75,14 +75,16 @@ public class CommandController {
             // Command exists
             if (commandId != 0L) {
                 Command _command = commandRepository.findById(commandId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Not found Command with id = " + productId));
+                        .orElseThrow(() -> new ResourceNotFoundException("Not found Command with id = " + commandId));
                 product.addCommand(_command);
                 productRepository.save(product);
+                _command = commandRepository.save(_command);
                 return _command;
             }
 
             // add and create new Command
             product.addCommand(commandRequest);
+            productRepository.save(product);
             return commandRepository.save(commandRequest);
         }).orElseThrow(() -> new ResourceNotFoundException("Not found Product with id = " + productId));
 
