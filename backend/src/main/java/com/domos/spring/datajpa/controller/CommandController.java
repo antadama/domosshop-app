@@ -2,7 +2,6 @@ package com.domos.spring.datajpa.controller;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,6 +12,7 @@ import com.domos.spring.datajpa.model.Command;
 import com.domos.spring.datajpa.model.Product;
 import com.domos.spring.datajpa.repository.CommandRepository;
 import com.domos.spring.datajpa.repository.ProductRepository;
+import com.domos.spring.datajpa.exception.ResourceNotFoundException;
 
 @CrossOrigin(origins = "http://localhost:8081")
 @RestController
@@ -40,13 +40,19 @@ public class CommandController {
 
     @GetMapping("/product/{productId}/command")
     public ResponseEntity<List<Command>> getAllCommandsByProductId(@PathVariable(value = "productId") Long productId) {
-        List<Command> commands = commandRepository.findCommandsByProductId(productId);
+
+        if (!productRepository.existsById(productId)) {
+            throw new ResourceNotFoundException("Not found Product with id = " + productId);
+        }
+
+        List<Command> commands = commandRepository.findCommandsByProductsId(productId);
         return new ResponseEntity<>(commands, HttpStatus.OK);
     }
 
     @GetMapping("/command/{id}")
     public ResponseEntity<Command> getCommandsById(@PathVariable(value = "id") Long id) {
-        Optional<Command> command = commandRepository.findById(id);
+        Command command = commandRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Not found Command with id = " + id));
 
         return new ResponseEntity<>(command, HttpStatus.OK);
     }
@@ -57,16 +63,16 @@ public class CommandController {
             throw new ResourceNotFoundException("Not found Command  with id = " + commandId);
         }
 
-        List<Product> products = productRepository.findProductsByCommandId(commandId);
+        List<Product> products = productRepository.findProductsByCommandsId(commandId);
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
     @PostMapping("/product/{productId}/command")
-    public ResponseEntity<Command> addCommand(@PathVariable(value = "productId") Long productId, @RequestBody Command commandRequest) {
+    public ResponseEntity<Command> addCommandToProduct(@PathVariable(value = "productId") Long productId, @RequestBody Command commandRequest) {
         Command command = productRepository.findById(productId).map(product -> {
             long commandId = commandRequest.getId();
 
-            // Command is existed
+            // Command exists
             if (commandId != 0L) {
                 Command _command = commandRepository.findById(commandId)
                         .orElseThrow(() -> new ResourceNotFoundException("Not found Command with id = " + productId));

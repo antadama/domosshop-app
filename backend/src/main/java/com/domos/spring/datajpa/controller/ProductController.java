@@ -2,7 +2,6 @@ package com.domos.spring.datajpa.controller;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.domos.spring.datajpa.model.Product;
 import com.domos.spring.datajpa.repository.ProductRepository;
+import com.domos.spring.datajpa.exception.ResourceNotFoundException;
 
 @CrossOrigin(origins = "http://localhost:8081")
 @RestController
@@ -31,77 +31,55 @@ public class ProductController {
 
     @GetMapping("/product")
     public ResponseEntity<List<Product>> getAllProducts() {
-        try {
-            List<Product> products = new ArrayList<Product>();
+        List<Product> products = new ArrayList<Product>();
 
-            productRepository.findAll().forEach(products::add);
+        productRepository.findAll().forEach(products::add);
 
-            if (products.isEmpty()) {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
-
-            return new ResponseEntity<>(products, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        if (products.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
+
+        return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
     @GetMapping("/product/{id}")
     public ResponseEntity<Product> getProductsById(@PathVariable("id") long id) {
-        Optional<Product> productData = productRepository.findById(id);
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Not found Product with id = " + id));
 
-        if (productData.isPresent()) {
-            return new ResponseEntity<>(productData.get(), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        return new ResponseEntity<>(product, HttpStatus.OK);
     }
 
     @PostMapping("/product")
     public ResponseEntity<Product> createProduct(@RequestBody Product product) {
-        try {
-            Product _product = productRepository
-                    .save(new Product(product.getName(), product.getDescription(), product.getPrice()));
-            return new ResponseEntity<>(_product, HttpStatus.CREATED);
-        } catch (Exception e) {
-            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        Product _product = productRepository.save(new Product(product.getName(), product.getDescription(), product.getPrice()));
+        return new ResponseEntity<>(_product, HttpStatus.CREATED);
     }
 
     @PutMapping("/product/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable("id") long id, @RequestBody Product product) {
-        Optional<Product> productData = productRepository.findById(id);
+        Product _product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Not found Product with id = " + id));
 
-        if (productData.isPresent()) {
-            Product _product = productData.get();
-            _product.setName(product.getName());
-            _product.setDescription(product.getDescription());
-            _product.setPrice(product.getPrice());
-            return new ResponseEntity<>(productRepository.save(_product), HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        _product.setName(product.getName());
+        _product.setDescription(product.getDescription());
+        _product.setPrice(product.getPrice());
+
+        return new ResponseEntity<>(productRepository.save(_product), HttpStatus.OK);
     }
 
     @DeleteMapping("/product/{id}")
     public ResponseEntity<HttpStatus> deleteProduct(@PathVariable("id") long id) {
-        try {
-            productRepository.deleteById(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        productRepository.deleteById(id);
+
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @DeleteMapping("/product")
     public ResponseEntity<HttpStatus> deleteAllProducts() {
-        try {
-            productRepository.deleteAll();
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        productRepository.deleteAll();
 
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
 }
